@@ -12,7 +12,7 @@ import logging
 from utils import log
 
 #import pymongo
-#`import pymongo.objectid
+#import pymongo.objectid
 
 import socket
 socket.setdefaulttimeout(8)
@@ -63,7 +63,7 @@ class Crawer():
 re_name= re.compile('<span\s+id="?btAsinTitle"?>(.*)</span>')
 
 #  <td><b class="priceLarge">￥ 8,749.00</b> 
-re_price = re.compile('<td><b\s+class="priceLarge">￥\s+([^<]*)</b>')
+re_price = re.compile('<b\s+class="priceLarge">￥\s+([^<]*)</b>')
 
 re_desc = re.compile('<div\s+class="productDescriptionWrapper">(.*)<div\s+class="emptyClear">', re.DOTALL)
 
@@ -80,14 +80,11 @@ class Amazon():
 		cont = c.open_url()
 		now = datetime.datetime.now()
 		obj = {
-			'history' : [{
-				'crawer_time' : now,
-				'price' : to_price( utils.re_match(re_price, cont) ),
-			}],
+			'crawer_time' : now,
+			'price' : to_price( utils.re_match(re_price, cont) ),
 			'name' : utils.re_match(re_name, cont),
 			'desc' : utils.re_match(re_desc, cont),
 			'url' : self.url,
-			'last_update' : now,
 		}
 		return obj
 	
@@ -114,8 +111,8 @@ class Amazon():
 if __name__ == "__main__":
 	parser = optparse.OptionParser()
 	parser.add_option("--url", dest="url", help="The target url")
-	parser.add_option("--notify", dest="notify", action='store_true', default=False, help="Notify me")
-	parser.add_option("--lower_than", dest="lower_than", help="Alert me when the price is lower than this value")
+	parser.add_option("--notify", dest="notify", action='store_true', default=False, help="Notify me, you need to install gmessage and notify-osd to use this.")
+	parser.add_option("--lower_than", dest="lower_than", help="Alert me when the price is lower than this value, also need gmessage and notify-osd")
 
 	(options, args) = parser.parse_args()
 	if options.url:
@@ -124,7 +121,7 @@ if __name__ == "__main__":
 		#amazon.update_price(ret)
 		if options.notify:
 			now = str(datetime.datetime.now())[11:19]
-			price = ret['history'][0]['price']
+			price = ret['price']
 			cmd = 'notify-send "%(now)s" "%(price)s" -t 8000;echo "%(price)s" | festival --tts' % locals()
 			os.system(cmd)
 
@@ -134,7 +131,11 @@ if __name__ == "__main__":
 					os.system('gmessage -center -nofocus -font "Sans Bold 48" "Done! Now price is %(price)s"; echo "Done! Done! Done!" | festival --tts' % locals())
 
 		for k in ret.keys():
-			print "%15s : %s" % (k, ret[k])
+			if isinstance(ret[k], str):
+				v = ret[k][:1024]
+			else:
+				v  = ret[k]
+			print "%15s : %s" % (k, v) 
 	else:
 		parser.print_help()
 		sys.exit(1)
