@@ -1,0 +1,29 @@
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+      google.load("visualization", "1", {packages:["corechart"]});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+		var history = {{ history }};
+		var prod_info = {{ prod_info }};
+
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Time');
+        data.addColumn('number', 'Price');
+        data.addRows(history.length);
+		for(var i=0; i<history.length; i++){
+			data.setValue(i, 0, history[i]['crawer_time']);
+			data.setValue(i, 1, history[i]['price']);
+		}
+
+        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+        chart.draw(data, {width: 900, height: 500, title: prod_info.name});
+      }
+    </script>
+  </head>
+
+  <body>
+    <div id="chart_div"></div>
+  </body>
+</html>
